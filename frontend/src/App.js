@@ -1,72 +1,41 @@
-import * as React from 'react';
-import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
-import Auth from "./components/Auth/Auth";
-import Profile from "./components/Profile/Profile";
-import NavBar from "./components/NavBar";
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-import DisplayMySubgreddiit from './components/MySubgreddiits/DisplayMySubgreddiit';
-import OpenMySubgreddiit from './components/MySubgreddiits/OpenMySubgreddiit'
-import DisplaySubgreddiits from './components/AllSubgreddiits/DisplaySubgreddiits';
-import OpenSubgreddiit from './components/AllSubgreddiits/OpenSubgreddiit';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
-import SavedPosts from './components/SavedPosts';
-
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-})
+import React from "react"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import "./App.css"
+import Home from './components/Home';
+import Navbar from "./components/Navbar"
+import UserService from "./services/Users"
+import Profile from "./components/Profile"
+import MySubGreddits from "./components/MySubGreddits"
+import OpenSubGreddits from "./components/OpenSubGreddits"
+import SubGreddits from "./components/SubGreddits"
+import ViewSubGreddits from "./components/ViewSubGreddits"
+import SavedPosts from "./components/SavedPosts"
 
 export default function App() {
-
-  const navigate = useNavigate()
-  const [open, setOpen] = React.useState(false)
-
-  if (!window.localStorage.getItem("login-status")) window.localStorage.setItem("login-status", "false")
-
-  const onLogOut = () => {
-    window.localStorage.setItem("login-status", "false")
-    window.localStorage.removeItem("user-details")
-    navigate("/")
-    setOpen(true)
-  }
-
-  const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
+  const [user, setuser] = React.useState(null)
+  React.useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('token')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setuser(user)
+      UserService.setToken(user.token)
     }
-
-    setOpen(false);
-  }
-
+  }, [])
   return (
-    <>
-      <NavBar logOut={onLogOut} />
-      <Routes>
-        {
-          (window.localStorage.getItem("login-status") === "true")
-            ?
-            <>
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/my-subgreddiits" element={<DisplayMySubgreddiit />} />
-              <Route path="/my-subgreddiits/:subgreddiitID" element={<OpenMySubgreddiit />} />
-              <Route path="/subgreddiits" element={<DisplaySubgreddiits />} />
-              <Route path="/subgreddiits/:subgreddiitID" element={<OpenSubgreddiit />} />
-              <Route path="/saved-posts" element={<SavedPosts />} />
-              <Route path="*" element={<Navigate to='/profile' />} />
-            </>
-            :
-            <>
-              <Route path="/" element={<Auth />} />
-              <Route path="*" element={<Navigate to='/' />} />
-            </>
-        }
-      </Routes>
-      <Snackbar open={open} anchorOrigin={{ vertical: "top", horizontal: "center" }} autoHideDuration={5000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-          <strong>{"Successfully logged out"}</strong>
-        </Alert>
-      </Snackbar>
-    </>
+    <Router>
+      <div className="container">
+        <Navbar user={user} setuser={setuser} />
+        <Routes>
+          <Route exact path="/" element={!window.localStorage.getItem('token')? <Home user={user} setuser={setuser} />: <Navigate replace to="/profile" />}/>
+          <Route path="/profile" element={window.localStorage.getItem('token') ? <Profile user={user} setuser={setuser} /> : <Navigate replace to="/" />} />
+          <Route path="/MySubGreddits" element={window.localStorage.getItem('token') ? <MySubGreddits user={user} setuser={setuser} /> : <Navigate replace to="/" />} />
+          <Route path="/OpenSubGreddits/:id" element={window.localStorage.getItem('token') ? <OpenSubGreddits user={user} setuser={setuser} /> : <Navigate replace to="/" />} />
+          <Route path="/SubGreddits" element={window.localStorage.getItem('token') ? <SubGreddits user={user} setuser={setuser} /> : <Navigate replace to="/" />} />
+          <Route path="/ViewSubGreddits/:id" element={window.localStorage.getItem('token') ? <ViewSubGreddits user={user} setuser={setuser} /> : <Navigate replace to="/" />} />
+          <Route path="/SavedPosts" element={window.localStorage.getItem('token') ? <SavedPosts user={user} setuser={setuser} /> : <Navigate replace to="/" />} />
+          <Route path="*" element={<Navigate replace to="/"/>} /> 
+        </Routes>
+      </div>
+    </Router>
   );
 }
