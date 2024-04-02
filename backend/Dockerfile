@@ -20,7 +20,7 @@ RUN npm i
 COPY --chown=node:node . ./
 
 # ? give access to 5000 port of docker
-EXPOSE 5000
+EXPOSE 3003
 
 # RUN chmod +x /bin/sh
 # RUN ls -a /bin/
